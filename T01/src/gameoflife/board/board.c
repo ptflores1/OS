@@ -2,51 +2,52 @@
 
 #include "board.h"
 
-Table *table_init(int **cells, int n, int size, int A, int B, int C)
+Board *board_init(char **cells, int n, int A, int B, int C, int size)
 {
-    Table *table = malloc(sizeof(Table));
-    table->values = malloc(size * size * sizeof(int));
+    Board *board = malloc(sizeof(Board));
+    board->values = malloc(size * size * sizeof(int));
 
-    table->iterations = 0;
-    table->cell_counts = 0;
-    table->size = size;
-    table->A = A;
-    table->B = B;
-    table->C = C;
+    board->iterations = 0;
+    board->cell_counts = 0;
+    board->size = size;
+    board->A = A;
+    board->B = B;
+    board->C = C;
 
-    return table;
+    return board;
 }
 
-int table_count_next_cells(Table *table, int i, int j){
+static int board_count_next_cells(Board *board, int i, int j)
+{
     int delta_i[] = {1, 1, 1, -1, -1, -1, 0, 0};
     int delta_j[] = {1, -1, 0, 1, -1, 0, 1, -1};
 
     int count = 0;
     for (int i = 0; i < 8; i++)
-        count += table->values[delta_i[i]][delta_j[i]];
+        count += board->values[delta_i[i]][delta_j[i]];
 
     return count;
 }
 
-int table_iterate_once(Table *table)
+int board_iterate_once(Board *board)
 {
-    int size = table->size;
+    int size = board->size;
     int **new_values = malloc(size * size * sizeof(int));
     for (int i = 0; i < size; i++)
     {
         for (int j = 0; j < size; j++)
         {
-            int c = table_count_next_cells(table, i, j);
-            new_values[i][j] = (c == table->A) || (table->A && (table->B <= c && c <= table->C));
+            int c = board_count_next_cells(board, i, j);
+            new_values[i][j] = (c == board->A) || (board->A && (board->B <= c && c <= board->C));
         }
     }
-    free(table->values);
-    table->values = new_values;
+    free(board->values);
+    board->values = new_values;
     return 0;
 }
 
-void table_destroy(Table *table)
+void board_destroy(Board *board)
 {
-    free(table->values);
-    free(table);
+    free(board->values);
+    free(board);
 }

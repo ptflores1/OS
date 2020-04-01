@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     int board_index = atoi(argv[6]);
 
     read_board(board_index);
-    
+
     for (int i = 0; i < list_size; i++) printf("%s ", list[i]);
     printf("\n");
     

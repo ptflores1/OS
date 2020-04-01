@@ -5,10 +5,10 @@ typedef struct
     int cell_counts;
     int size;
     int A, B, C;
-} Table;
+} Board;
 
-Table *table_init(int **cells, int n, int size, int A, int B, int C);
+Board *board_init(char **cells, int n, int A, int B, int C, int size);
 
-int table_iterate_once(Table *table);
+int board_iterate_once(Board *board);
 
-void table_destroy(Table *table);
+void board_destroy(Board *board);
