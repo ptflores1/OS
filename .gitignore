@@ -1,2 +1,5 @@
 .DS_Store
 .vscode
+obj/
+T01/gameoflife
+T01/solution

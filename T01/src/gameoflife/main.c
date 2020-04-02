@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
 
 #include "board/board.h"
 #include "../utils/utils.h"
@@ -8,14 +10,23 @@ FILE *file;
 char *line;
 int list_size;
 char **list;
+Board *board;
 
-void cleanup(){
-    if(file) fclose(file);
+void handle_sigint(int signal){
+    printf("Catched SIGINT\n");
+    exit(0);
+}
+
+void cleanup()
+{
+    printf("CLEANUP...\n");
+    if (file) fclose(file);
     if(line) free(line);
     if(list){
         for (int i = 0; i < list_size; i++) free(list[i]);
         free(list);
     }
+    board_destroy(board);
 }
 
 void read_board(int board_index){
@@ -41,6 +52,7 @@ void read_board(int board_index){
 
 int main(int argc, char *argv[])
 {
+    signal(SIGINT, handle_sigint);
     if (argc != 7)
     {
         printf("Cantidad de argumentos incorrecta.\n");
@@ -58,8 +70,8 @@ int main(int argc, char *argv[])
 
     read_board(board_index);
 
-    for (int i = 0; i < list_size; i++) printf("%s ", list[i]);
-    printf("\n");
-    
+    board = board_init(list, A, B, C, D);
+    for (int i = 0; i < iters; i++) if (!board_iterate_once(board)) kill(getpid(), SIGINT);
+
     return 0;
 }
