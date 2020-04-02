@@ -2,17 +2,24 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <string.h>
+#include <sys/stat.h>
 
 #include "board/board.h"
 #include "../utils/utils.h"
 
+int process_line;
 FILE *file;
 char *line;
 int list_size;
 char **list;
 Board *board;
 
-void handle_sigint(int signal){
+void write_info(Board *board, int is_sigint, int finished);
+
+void handle_sigint(int signal)
+{
+    write_info(board, 1, 0);
     printf("Catched SIGINT\n");
     exit(0);
 }
@@ -50,13 +57,40 @@ void read_board(int board_index){
     }
 }
 
+void write_info(Board* board, int is_sigint, int finished){
+    char msg[8];
+    if(is_sigint)
+        strcpy(msg, "SIGNAL");
+    else if(finished)
+        strcpy(msg, "NOTIME");
+    else
+        strcpy(msg, "NOCELLS");
+
+    char folder[256];
+    strcpy(folder, "files");
+    struct stat sb;
+    if (!(stat(folder, &sb) == 0 && S_ISDIR(sb.st_mode)))
+        mkdir(folder, 0777);
+
+    char sprocess_line[10];
+    
+    sprintf(sprocess_line, "%d", process_line);
+    strcat(folder, "/");
+    strcat(folder, sprocess_line);
+    strcat(folder, ".csv");
+
+    FILE *fp = fopen(folder, "w");
+    fprintf(fp, "%d, %d, %s\n", board->cell_counts, board->iterations, msg);
+    fclose(fp);
+}
+
 int main(int argc, char *argv[])
 {
     signal(SIGINT, handle_sigint);
-    if (argc != 7)
+    if (argc != 8)
     {
         printf("Cantidad de argumentos incorrecta.\n");
-        printf("Modo de uso: gameoflife iteraciones A B C D tablero.\n");
+        printf("Modo de uso: gameoflife iteraciones A B C D tablero proceso.\n");
         exit(0);
     }
 
@@ -67,11 +101,18 @@ int main(int argc, char *argv[])
     int C = atoi(argv[4]);
     int D = atoi(argv[5]);
     int board_index = atoi(argv[6]);
+    process_line = atoi(argv[7]);
 
     read_board(board_index);
 
     board = board_init(list, A, B, C, D);
-    for (int i = 0; i < iters; i++) if (!board_iterate_once(board)) kill(getpid(), SIGINT);
+    int i;
+    for (i = 0; i < iters; i++) if (!board_iterate_once(board)) break;
+    
+    if (i == iters - 1)
+        write_info(board, 0, 1);
+    else
+        write_info(board, 0, 0);
 
     return 0;
 }
