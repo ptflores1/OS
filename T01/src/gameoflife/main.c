@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <time.h>
 
 #include "board/board.h"
 #include "../utils/utils.h"
@@ -20,13 +21,13 @@ void write_info(Board *board, int is_sigint, int finished);
 void handle_sigint(int signal)
 {
     write_info(board, 1, 0);
-    printf("Catched SIGINT\n");
+    printf("%d Catched SIGINT\n", getpid());
     exit(0);
 }
 
 void cleanup()
 {
-    printf("CLEANUP...\n");
+    printf("%d CLEANUP...\n", getpid());
     if (file) fclose(file);
     if(line) free(line);
     if(list){
@@ -47,9 +48,10 @@ void read_board(int board_index){
     {
         if (line[read - 1] == '\n')
             line[read - 1] = '\0';
-
+        
         if (it == board_index)
         {
+            printf("%d Board: %s\n", getpid(), line);
             char *s = " ";
             list = split(line, s, &list_size);
         }
@@ -86,6 +88,7 @@ void write_info(Board* board, int is_sigint, int finished){
 
 int main(int argc, char *argv[])
 {
+    sleep(1);
     signal(SIGINT, handle_sigint);
     if (argc != 8)
     {
@@ -93,7 +96,7 @@ int main(int argc, char *argv[])
         printf("Modo de uso: gameoflife iteraciones A B C D tablero proceso.\n");
         exit(0);
     }
-
+    printf("%d CALLED gameoflife %s %s %s %s %s %s %s\n",getpid(), argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7]);
     atexit(cleanup);
     int iters = atoi(argv[1]);
     int A = atoi(argv[2]);
@@ -103,7 +106,7 @@ int main(int argc, char *argv[])
     int board_index = atoi(argv[6]);
     process_line = atoi(argv[7]);
 
-    read_board(board_index);
+    read_board(board_index - 1);
 
     board = board_init(list, A, B, C, D);
     int i;

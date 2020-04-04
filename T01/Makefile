@@ -49,7 +49,7 @@ LIB=$(GTK) $(MTH) $(THR)
 COMMON=utils
 
 # Directorios que serán compilados a un programa
-PROGRAMS=solution gameoflife
+PROGRAMS=crvid gameoflife
 
 # Todos los directorios que contienen archivos de código
 SRCDIR=$(COMMON) $(PROGRAMS)
