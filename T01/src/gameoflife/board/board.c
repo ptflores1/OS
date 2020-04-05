@@ -50,16 +50,20 @@ int board_iterate_once(Board *board)
         for (int j = 0; j < size; j++)
         {
             int c = board_count_next_cells(board, i, j);
-            new_values[i][j] = (c == board->A) || (board->A && (board->B <= c && c <= board->C));
+            new_values[i][j] = ((c == board->A) || (board->values[i][j] && (board->B <= c && c <= board->C)));
             total += new_values[i][j];
         }
     }
-     
-    for (int i = 0; i < size; i++) free(board->values[i]);
-    free(board->values);
+
+    if(board->values){
+        for (int i = 0; i < size; i++) if (board->values[i]) free(board->values[i]);
+        free(board->values);
+    } 
     board->values = new_values;
     board->cell_counts = total;
     board->iterations++;
+    // printf("BOARD: \n");
+    // board_print(board);
     return total;
 }
 
@@ -73,7 +77,13 @@ void board_print(Board * board){
 
 void board_destroy(Board *board)
 {
-    for (int i = 0; i < board->size; i++) free(board->values[i]);
-    free(board->values);
-    free(board);
+    if(board){
+        if (board->values)
+        {
+            for (int i = 0; i < board->size; i++) if (board->values[i]) free(board->values[i]);
+            free(board->values);
+        }
+        free(board);
+    }
+    
 }

@@ -20,8 +20,8 @@ void write_info(Board *board, int is_sigint, int finished);
 
 void handle_sigint(int signal)
 {
+    printf("%d CATCHED SIGINT\n", getpid());
     write_info(board, 1, 0);
-    printf("%d Catched SIGINT\n", getpid());
     exit(0);
 }
 
@@ -31,14 +31,18 @@ void cleanup()
     if (file) fclose(file);
     if(line) free(line);
     if(list){
-        for (int i = 0; i < list_size; i++) free(list[i]);
+        for (int i = 0; i < list_size; i++) if (list[i]) free(list[i]);
         free(list);
     }
     board_destroy(board);
 }
 
 void read_board(int board_index){
-    file = fopen("boards.txt", "r");
+    file = fopen("Inputs T01/simulador/tableros.txt", "r");
+    if(!file){
+        printf("%d FILE: %s DOES NOT EXIST\n", getpid(), "Inputs T01/simulador/tableros.txt");
+        return;
+    }
 
     line = NULL;
     size_t len = 0;
@@ -51,7 +55,6 @@ void read_board(int board_index){
         
         if (it == board_index)
         {
-            printf("%d Board: %s\n", getpid(), line);
             char *s = " ";
             list = split(line, s, &list_size);
         }
@@ -60,6 +63,7 @@ void read_board(int board_index){
 }
 
 void write_info(Board* board, int is_sigint, int finished){
+    printf("%d WRITING BOARD\n", getpid());
     char msg[8];
     if(is_sigint)
         strcpy(msg, "SIGNAL");
@@ -82,22 +86,26 @@ void write_info(Board* board, int is_sigint, int finished){
     strcat(folder, ".csv");
 
     FILE *fp = fopen(folder, "w");
+    if (!fp)
+    {
+        printf("%d FILE: %s DOES NOT EXIST\n", getpid(), folder);
+        return;
+    }
     fprintf(fp, "%d, %d, %s\n", board->cell_counts, board->iterations, msg);
     fclose(fp);
 }
 
 int main(int argc, char *argv[])
 {
-    sleep(1);
+    atexit(cleanup);
     signal(SIGINT, handle_sigint);
     if (argc != 8)
     {
-        printf("Cantidad de argumentos incorrecta.\n");
-        printf("Modo de uso: gameoflife iteraciones A B C D tablero proceso.\n");
+        printf("%d Cantidad de argumentos incorrecta.\n", getpid());
+        printf("%d Modo de uso: gameoflife iteraciones A B C D tablero proceso.\n", getpid());
         exit(0);
     }
-    printf("%d CALLED gameoflife %s %s %s %s %s %s %s\n",getpid(), argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7]);
-    atexit(cleanup);
+    printf("%d CALLED gameoflife %s %s %s %s %s %s %s\n", getpid(), argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7]);
     int iters = atoi(argv[1]);
     int A = atoi(argv[2]);
     int B = atoi(argv[3]);
@@ -106,9 +114,11 @@ int main(int argc, char *argv[])
     int board_index = atoi(argv[6]);
     process_line = atoi(argv[7]);
 
-    read_board(board_index - 1);
+    read_board(board_index);
 
     board = board_init(list, A, B, C, D);
+    printf("\n");
+    board_print(board);
     int i;
     for (i = 0; i < iters; i++) if (!board_iterate_once(board)) break;
     
