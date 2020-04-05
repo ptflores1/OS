@@ -117,8 +117,8 @@ int main(int argc, char *argv[])
     read_board(board_index);
 
     board = board_init(list, A, B, C, D);
-    printf("\n");
-    board_print(board);
+    // printf("\n");
+    // board_print(board);
     int i;
     for (i = 0; i < iters; i++) if (!board_iterate_once(board)) break;
     
